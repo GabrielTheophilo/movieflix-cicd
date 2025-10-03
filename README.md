@@ -8,6 +8,9 @@ Projeto final que integra:
 - Fluxo de dados com Data Lake, Data Warehouse (DW) e Data Mart.
 - ETL para carregar e preparar dados no PostgreSQL.
 
+
+SQL para consultas do Data Mart -> arquivo analytics.sql
+
 ## Componentes
 - App Web
   - Porta interna 3000.
