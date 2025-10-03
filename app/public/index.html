@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>MovieFlix - Cadastro e Avaliações</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>MovieFlix</h1>
+
+    <section class="card">
+      <h2>Cadastrar Filme</h2>
+      <form id="movieForm">
+        <div class="row">
+          <label>Título</label>
+          <input name="title" required />
+        </div>
+        <div class="row">
+          <label>Gênero</label>
+          <input name="genre" required />
+        </div>
+        <div class="row">
+          <label>Ano</label>
+          <input name="year" type="number" />
+        </div>
+        <div class="row">
+          <label>Descrição</label>
+          <textarea name="description"></textarea>
+        </div>
+        <button type="submit">Salvar</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Cadastrar Usuário</h2>
+      <form id="userForm">
+        <div class="row">
+          <label>Nome</label>
+          <input name="name" required />
+        </div>
+        <div class="row">
+          <label>Idade</label>
+          <input name="age" type="number" />
+        </div>
+        <div class="row">
+          <label>País</label>
+          <input name="country" />
+        </div>
+        <button type="submit">Cadastrar Usuário</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Avaliar Filme</h2>
+      <form id="ratingForm">
+        <div class="row">
+          <label>ID do Filme</label>
+          <input name="movieId" placeholder="ex: m_1690000000000" required />
+        </div>
+        <div class="row">
+          <label>Usuário</label>
+          <input name="user" placeholder="opcional" />
+        </div>
+        <div class="row">
+          <label>Nota (1-5)</label>
+          <input name="score" type="number" min="1" max="5" required />
+        </div>
+        
+        <button type="submit">Enviar Avaliação</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Filmes</h2>
+      <button id="reloadBtn">Recarregar Lista</button>
+      <div id="movies"></div>
+    </section>
+  </div>
+
+  <script>
+    async function reload() {
+      const res = await fetch('api/movies');
+      const movies = await res.json();
+      const container = document.getElementById('movies');
+      container.innerHTML = '';
+      movies.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'movie';
+        div.innerHTML = `
+          <strong>${m.title}</strong> (${m.year || 's/ano'}) - ${m.genre}<br/>
+          ID: ${m.id}<br/>
+          Média: ${m.avgRating ?? '—'} (${m.ratingsCount} avaliações)
+          ${m.description ? `<p>${m.description}</p>` : ''}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById('reloadBtn').addEventListener('click', reload);
+    reload();
+
+    document.getElementById('movieForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      const res = await fetch('api/movies', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        e.target.reset();
+        await reload();
+        alert('Filme cadastrado!');
+      } else {
+        const err = await res.json().catch(()=>({}));
+        alert('Erro: ' + (err.error || res.status));
+      }
+    });
+
+    document.getElementById('ratingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      body.score = Number(body.score);
+      const res = await fetch('api/ratings', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        e.target.reset();
+        await reload();
+        alert('Avaliação enviada!');
+      } else {
+        const err = await res.json().catch(()=>({}));
+        alert('Erro: ' + (err.error || res.status));
+      }
+    });
+
+    document.getElementById('userForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      if (body.age) body.age = Number(body.age);
+      const res = await fetch('api/users', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        e.target.reset();
+        alert('Usuário cadastrado!');
+      } else {
+        const err = await res.json().catch(()=>({}));
+        alert('Erro: ' + (err.error || res.status));
+      }
+    });
+  </script>
+</body>
+</html>
